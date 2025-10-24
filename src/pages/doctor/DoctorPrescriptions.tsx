@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 const DoctorPrescriptions = () => {
-  const [prescriptions] = useState([
+  const [prescriptions, setPrescriptions] = useState([
     {
       id: 1,
       patient: "Alice Johnson",
@@ -49,21 +49,66 @@ const DoctorPrescriptions = () => {
   const [showWriteDialog, setShowWriteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleWritePrescription = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Prescription created successfully!");
-    setShowWriteDialog(false);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const newPrescription = {
+      id: prescriptions.length + 1,
+      patient: formData.get("patient-select") as string,
+      medication: formData.get("medication") as string,
+      dosage: formData.get("dosage") as string,
+      duration: formData.get("duration") as string,
+      date: new Date().toISOString().split('T')[0],
+      status: "active",
+      refillRequest: false,
+    };
+    
+    setTimeout(() => {
+      setPrescriptions(prev => [...prev, newPrescription]);
+      toast.success("Prescription created successfully!");
+      setIsLoading(false);
+      setShowWriteDialog(false);
+    }, 2000);
   };
 
   const handleEditPrescription = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Prescription updated successfully!");
-    setShowEditDialog(false);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    setTimeout(() => {
+      if (selectedPrescription) {
+        setPrescriptions(prev => prev.map(presc => 
+          presc.id === selectedPrescription.id 
+            ? {
+                ...presc,
+                medication: formData.get("edit-medication") as string,
+                dosage: formData.get("edit-dosage") as string,
+                duration: formData.get("edit-duration") as string,
+              }
+            : presc
+        ));
+        toast.success("Prescription updated successfully!");
+      }
+      setIsLoading(false);
+      setShowEditDialog(false);
+    }, 2000);
   };
 
-  const handleApproveRefill = (patient: string, medication: string) => {
-    toast.success(`Refill approved for ${patient} - ${medication}`);
+  const handleApproveRefill = (id: number, patient: string, medication: string) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setPrescriptions(prev => prev.map(presc => 
+        presc.id === id ? { ...presc, refillRequest: false } : presc
+      ));
+      toast.success(`Refill approved for ${patient} - ${medication}`);
+      setIsLoading(false);
+    }, 2000);
   };
 
   return (
@@ -95,36 +140,37 @@ const DoctorPrescriptions = () => {
                   <form onSubmit={handleWritePrescription} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="patient-select">Patient</Label>
-                      <Input id="patient-select" placeholder="Select patient" required />
+                      <Input id="patient-select" name="patient-select" placeholder="Select patient" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="medication">Medication</Label>
-                      <Input id="medication" placeholder="e.g., Amoxicillin 500mg" required />
+                      <Input id="medication" name="medication" placeholder="e.g., Amoxicillin 500mg" required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="dosage">Dosage</Label>
-                        <Input id="dosage" placeholder="e.g., 1 tablet daily" required />
+                        <Input id="dosage" name="dosage" placeholder="e.g., 1 tablet daily" required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="duration">Duration</Label>
-                        <Input id="duration" placeholder="e.g., 30 days" required />
+                        <Input id="duration" name="duration" placeholder="e.g., 30 days" required />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="instructions">Instructions</Label>
                       <Textarea
                         id="instructions"
+                        name="instructions"
                         placeholder="Additional instructions for patient..."
                         rows={3}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="refills">Number of Refills</Label>
-                      <Input id="refills" type="number" defaultValue="0" min="0" max="12" />
+                      <Input id="refills" name="refills" type="number" defaultValue="0" min="0" max="12" />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Create Prescription
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Creating Prescription..." : "Create Prescription"}
                     </Button>
                   </form>
                 </DialogContent>
@@ -135,9 +181,13 @@ const DoctorPrescriptions = () => {
               {prescriptions.map((prescription, index) => (
                 <motion.div
                   key={prescription.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  initial={{ opacity: 0, scale: 0.95, height: 0 }}
+                  animate={{ opacity: 1, scale: 1, height: "auto" }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    duration: 0.3,
+                    ease: "easeOut"
+                  }}
                 >
                   <Card className="hover:border-accent transition-colors">
                     <CardHeader>
@@ -212,13 +262,15 @@ const DoctorPrescriptions = () => {
                               size="sm"
                               onClick={() =>
                                 handleApproveRefill(
+                                  prescription.id,
                                   prescription.patient,
                                   prescription.medication
                                 )
                               }
+                              disabled={isLoading}
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve Refill
+                              {isLoading ? "Approving..." : "Approve Refill"}
                             </Button>
                           )}
                         </div>
@@ -245,6 +297,7 @@ const DoctorPrescriptions = () => {
                       <Label htmlFor="edit-medication">Medication</Label>
                       <Input
                         id="edit-medication"
+                        name="edit-medication"
                         defaultValue={selectedPrescription.medication}
                         required
                       />
@@ -254,6 +307,7 @@ const DoctorPrescriptions = () => {
                         <Label htmlFor="edit-dosage">Dosage</Label>
                         <Input
                           id="edit-dosage"
+                          name="edit-dosage"
                           defaultValue={selectedPrescription.dosage}
                           required
                         />
@@ -262,13 +316,14 @@ const DoctorPrescriptions = () => {
                         <Label htmlFor="edit-duration">Duration</Label>
                         <Input
                           id="edit-duration"
+                          name="edit-duration"
                           defaultValue={selectedPrescription.duration}
                           required
                         />
                       </div>
                     </div>
-                    <Button type="submit" className="w-full">
-                      Save Changes
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Saving..." : "Save Changes"}
                     </Button>
                   </form>
                 )}

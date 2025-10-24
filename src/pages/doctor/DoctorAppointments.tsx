@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 const DoctorAppointments = () => {
-  const [appointments] = useState([
+  const [appointments, setAppointments] = useState([
     {
       id: 1,
       patient: "Alice Johnson",
@@ -52,15 +52,37 @@ const DoctorAppointments = () => {
   ]);
 
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleStartConsultation = (patient: string) => {
-    toast.success(`Starting consultation with ${patient}`);
+    setIsLoading(true);
+    setTimeout(() => {
+      toast.success(`Starting consultation with ${patient}`);
+      setIsLoading(false);
+    }, 2000);
   };
 
   const handleReschedule = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Appointment rescheduled successfully");
-    setShowRescheduleDialog(false);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const newDate = formData.get("new-date") as string;
+    const newTime = formData.get("new-time") as string;
+    
+    setTimeout(() => {
+      if (selectedAppointment) {
+        setAppointments(prev => prev.map(apt => 
+          apt.id === selectedAppointment.id 
+            ? { ...apt, date: newDate, time: newTime }
+            : apt
+        ));
+        toast.success("Appointment rescheduled successfully");
+      }
+      setIsLoading(false);
+      setShowRescheduleDialog(false);
+    }, 2000);
   };
 
   return (
@@ -152,7 +174,10 @@ const DoctorAppointments = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setShowRescheduleDialog(true)}
+                              onClick={() => {
+                                setSelectedAppointment(appointment);
+                                setShowRescheduleDialog(true);
+                              }}
                             >
                               <Edit2 className="h-4 w-4 mr-2" />
                               Reschedule
@@ -184,14 +209,14 @@ const DoctorAppointments = () => {
                 <form onSubmit={handleReschedule} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-date">New Date</Label>
-                    <Input id="new-date" type="date" required />
+                    <Input id="new-date" name="new-date" type="date" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-time">New Time</Label>
-                    <Input id="new-time" type="time" required />
+                    <Input id="new-time" name="new-time" type="time" required />
                   </div>
-                  <Button type="submit" className="w-full">
-                    Confirm Reschedule
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Rescheduling..." : "Confirm Reschedule"}
                   </Button>
                 </form>
               </DialogContent>

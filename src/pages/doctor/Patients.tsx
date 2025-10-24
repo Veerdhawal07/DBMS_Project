@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
 const Patients = () => {
-  const [patients] = useState([
+  const [patients, setPatients] = useState([
     {
       id: 1,
       name: "Alice Johnson",
@@ -48,11 +48,30 @@ const Patients = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddPatient = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Patient added successfully!");
-    setShowAddDialog(false);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const newPatient = {
+      id: patients.length + 1,
+      name: formData.get("patient-name") as string,
+      age: parseInt(formData.get("age") as string),
+      gender: formData.get("gender") as string,
+      contact: formData.get("contact") as string,
+      lastVisit: new Date().toISOString().split('T')[0],
+      condition: formData.get("condition") as string || "General",
+      status: "active",
+    };
+    
+    setTimeout(() => {
+      setPatients(prev => [...prev, newPatient]);
+      toast.success(`Patient ${newPatient.name} added successfully!`);
+      setIsLoading(false);
+      setShowAddDialog(false);
+    }, 2000);
   };
 
   const handleViewProfile = (patient: any) => {
@@ -61,7 +80,11 @@ const Patients = () => {
   };
 
   const handleScheduleAppointment = (patientName: string) => {
-    toast.success(`Appointment scheduled with ${patientName}`);
+    setIsLoading(true);
+    setTimeout(() => {
+      toast.success(`Appointment scheduled with ${patientName}`);
+      setIsLoading(false);
+    }, 2000);
   };
 
   return (
@@ -93,28 +116,28 @@ const Patients = () => {
                   <form onSubmit={handleAddPatient} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="patient-name">Full Name</Label>
-                      <Input id="patient-name" placeholder="John Doe" required />
+                      <Input id="patient-name" name="patient-name" placeholder="John Doe" required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="age">Age</Label>
-                        <Input id="age" type="number" placeholder="45" required />
+                        <Input id="age" name="age" type="number" placeholder="45" required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="gender">Gender</Label>
-                        <Input id="gender" placeholder="Male/Female" required />
+                        <Input id="gender" name="gender" placeholder="Male/Female" required />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="contact">Contact</Label>
-                      <Input id="contact" type="tel" placeholder="+1 (555) 000-0000" required />
+                      <Input id="contact" name="contact" type="tel" placeholder="+1 (555) 000-0000" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="condition">Medical Condition</Label>
-                      <Input id="condition" placeholder="Brief description" />
+                      <Input id="condition" name="condition" placeholder="Brief description" />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Add Patient
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Adding Patient..." : "Add Patient"}
                     </Button>
                   </form>
                 </DialogContent>
@@ -132,9 +155,13 @@ const Patients = () => {
               {patients.map((patient, index) => (
                 <motion.div
                   key={patient.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  initial={{ opacity: 0, scale: 0.95, height: 0 }}
+                  animate={{ opacity: 1, scale: 1, height: "auto" }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    duration: 0.3,
+                    ease: "easeOut"
+                  }}
                 >
                   <Card className="hover:border-accent transition-colors">
                     <CardHeader>

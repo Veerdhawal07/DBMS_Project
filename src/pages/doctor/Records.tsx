@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 
 const Records = () => {
-  const [records] = useState([
+  const [records, setRecords] = useState([
     {
       id: 1,
       patient: "Alice Johnson",
@@ -42,17 +42,53 @@ const Records = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddRecord = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Medical record created successfully!");
-    setShowAddDialog(false);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const newRecord = {
+      id: records.length + 1,
+      patient: formData.get("patient") as string,
+      date: new Date().toISOString().split('T')[0],
+      type: formData.get("record-type") as string,
+      diagnosis: formData.get("diagnosis") as string,
+      notes: formData.get("notes") as string || "",
+    };
+    
+    setTimeout(() => {
+      setRecords(prev => [...prev, newRecord]);
+      toast.success("Medical record created successfully!");
+      setIsLoading(false);
+      setShowAddDialog(false);
+    }, 2000);
   };
 
   const handleEditRecord = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Record updated successfully!");
-    setShowEditDialog(false);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    setTimeout(() => {
+      if (selectedRecord) {
+        setRecords(prev => prev.map(rec => 
+          rec.id === selectedRecord.id 
+            ? {
+                ...rec,
+                type: formData.get("edit-type") as string,
+                diagnosis: formData.get("edit-diagnosis") as string,
+                notes: formData.get("edit-notes") as string || "",
+              }
+            : rec
+        ));
+        toast.success("Record updated successfully!");
+      }
+      setIsLoading(false);
+      setShowEditDialog(false);
+    }, 2000);
   };
 
   const handleDownload = (patient: string) => {
@@ -88,16 +124,17 @@ const Records = () => {
                   <form onSubmit={handleAddRecord} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="patient">Patient Name</Label>
-                      <Input id="patient" placeholder="Select patient" required />
+                      <Input id="patient" name="patient" placeholder="Select patient" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="record-type">Record Type</Label>
-                      <Input id="record-type" placeholder="e.g., Annual Checkup" required />
+                      <Input id="record-type" name="record-type" placeholder="e.g., Annual Checkup" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="diagnosis">Diagnosis</Label>
                       <Textarea
                         id="diagnosis"
+                        name="diagnosis"
                         placeholder="Enter diagnosis details..."
                         rows={4}
                         required
@@ -107,12 +144,13 @@ const Records = () => {
                       <Label htmlFor="notes">Additional Notes</Label>
                       <Textarea
                         id="notes"
+                        name="notes"
                         placeholder="Any additional observations..."
                         rows={4}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Create Record
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Creating Record..." : "Create Record"}
                     </Button>
                   </form>
                 </DialogContent>
@@ -123,9 +161,13 @@ const Records = () => {
               {records.map((record, index) => (
                 <motion.div
                   key={record.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  initial={{ opacity: 0, scale: 0.95, height: 0 }}
+                  animate={{ opacity: 1, scale: 1, height: "auto" }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    duration: 0.3,
+                    ease: "easeOut"
+                  }}
                 >
                   <Card className="hover:border-accent transition-colors">
                     <CardHeader>
@@ -216,6 +258,7 @@ const Records = () => {
                       <Label htmlFor="edit-type">Record Type</Label>
                       <Input
                         id="edit-type"
+                        name="edit-type"
                         defaultValue={selectedRecord.type}
                         required
                       />
@@ -224,6 +267,7 @@ const Records = () => {
                       <Label htmlFor="edit-diagnosis">Diagnosis</Label>
                       <Textarea
                         id="edit-diagnosis"
+                        name="edit-diagnosis"
                         defaultValue={selectedRecord.diagnosis}
                         rows={4}
                         required
@@ -233,12 +277,13 @@ const Records = () => {
                       <Label htmlFor="edit-notes">Notes</Label>
                       <Textarea
                         id="edit-notes"
+                        name="edit-notes"
                         defaultValue={selectedRecord.notes}
                         rows={4}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Save Changes
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Saving..." : "Save Changes"}
                     </Button>
                   </form>
                 )}
