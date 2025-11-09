@@ -1,22 +1,16 @@
-# Welcome to your Lovable project
+# MediChain Healthcare Platform
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/2e677c96-1ef0-4477-a3de-9b519d177329
+This is a healthcare platform that connects patients and doctors for better medical care.
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/2e677c96-1ef0-4477-a3de-9b519d177329) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+You can clone this repo and work locally using your own IDE. Pushed changes will be reflected in the application.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +56,8 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/2e677c96-1ef0-4477-a3de-9b519d177329) and click on Share -> Publish.
+You can deploy this project using any static hosting service like Vercel, Netlify, or GitHub Pages.
 
-## Can I connect a custom domain to my Lovable project?
+## Custom Domain Setup
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+To connect a custom domain to your project, you'll need to configure DNS settings with your domain provider.
