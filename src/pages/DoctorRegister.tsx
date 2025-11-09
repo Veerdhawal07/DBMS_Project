@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { doctorAuthApi } from "@/lib/api";
 
 const DoctorRegister = () => {
   const navigate = useNavigate();
@@ -18,18 +19,46 @@ const DoctorRegister = () => {
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords don't match");
       return;
     }
-    if (Object.values(formData).every((val) => val)) {
+    if (!Object.values(formData).every((val) => val)) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // Prepare data for API call
+      const registrationData = {
+        full_name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        specialization: formData.specialization,
+        medical_license_number: formData.licenseNumber,
+        password: formData.password,
+        hospital_name: "",
+      };
+      
+      const response = await doctorAuthApi.signup(registrationData);
+      
+      // Store user data in localStorage
+      localStorage.setItem('doctor_data', JSON.stringify(response.doctor));
+      localStorage.setItem('doctor_access_token', response.access_token);
+      localStorage.setItem('doctor_refresh_token', response.refresh_token);
+      
       toast.success("Registration successful!");
       navigate("/doctor/dashboard");
-    } else {
-      toast.error("Please fill in all fields");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,8 +183,8 @@ const DoctorRegister = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Create Account
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 

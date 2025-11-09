@@ -11,9 +11,24 @@ import {
 import { Stethoscope, LayoutDashboard, Users, FileText, Pill, Calendar, User, Settings, LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const DoctorSidebar = () => {
   const navigate = useNavigate();
+  const [doctorName, setDoctorName] = useState("Doctor");
+
+  useEffect(() => {
+    // Get doctor data from localStorage
+    const doctorData = localStorage.getItem('doctor_data');
+    if (doctorData) {
+      try {
+        const parsedData = JSON.parse(doctorData);
+        setDoctorName(`${parsedData.firstname} ${parsedData.lastname}`);
+      } catch (error) {
+        console.error("Error parsing doctor data:", error);
+      }
+    }
+  }, []);
 
   const menuItems = [
     { title: "Dashboard", url: "/doctor/dashboard", icon: LayoutDashboard },
@@ -26,6 +41,10 @@ const DoctorSidebar = () => {
   ];
 
   const handleLogout = () => {
+    // Clear all doctor-related data from localStorage
+    localStorage.removeItem('doctor_access_token');
+    localStorage.removeItem('doctor_refresh_token');
+    localStorage.removeItem('doctor_data');
     toast.success("Logged out successfully");
     navigate("/");
   };
@@ -39,6 +58,7 @@ const DoctorSidebar = () => {
             <div>
               <h2 className="font-bold text-lg">MediChain</h2>
               <p className="text-xs text-muted-foreground">Doctor Portal</p>
+              <p className="text-xs font-medium truncate">{doctorName}</p>
             </div>
           </div>
         </div>

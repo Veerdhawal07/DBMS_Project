@@ -6,9 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Users, FileText, Pill, Calendar, Plus, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
+  const [doctorName, setDoctorName] = useState("Dr. Smith");
+
+  useEffect(() => {
+    // Get doctor data from localStorage
+    const doctorData = localStorage.getItem('doctor_data');
+    if (doctorData) {
+      try {
+        const parsedData = JSON.parse(doctorData);
+        setDoctorName(`Dr. ${parsedData.firstname} ${parsedData.lastname}`);
+      } catch (error) {
+        console.error("Error parsing doctor data:", error);
+      }
+    }
+  }, []);
 
   const stats = [
     { title: "Total Patients", value: "248", icon: Users, color: "text-accent" },
@@ -52,7 +67,7 @@ const DoctorDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold mb-2">Doctor Dashboard</h1>
-                <p className="text-muted-foreground">Welcome back, Dr. Smith</p>
+                <p className="text-muted-foreground">Welcome back, {doctorName}</p>
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleAddPatient} variant="outline">

@@ -6,19 +6,41 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { patientAuthApi } from "@/lib/api";
 
 const PatientLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      toast.success("Login successful!");
-      navigate("/patient/dashboard");
-    } else {
+    if (!email || !password) {
       toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await patientAuthApi.login({ email, password });
+      
+      if (response.access_token) {
+        // Store tokens and user data in localStorage
+        localStorage.setItem('patient_access_token', response.access_token);
+        localStorage.setItem('patient_refresh_token', response.refresh_token);
+        localStorage.setItem('patient_data', JSON.stringify(response.patient));
+        
+        toast.success("Login successful!");
+        navigate("/patient/dashboard");
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.message || "Login failed. Please check your credentials and try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,7 +56,7 @@ const PatientLogin = () => {
             <Heart className="h-12 w-12 text-accent" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Patient Login</h1>
-          <p className="text-muted-foreground">Access your health records securely</p>
+          <p className="text-muted-foreground">Access your health records</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8">
@@ -50,6 +72,8 @@ const PatientLogin = () => {
                   className="pl-10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
                 />
               </div>
             </div>
@@ -65,12 +89,14 @@ const PatientLogin = () => {
                   className="pl-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Login to Dashboard
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Logging in..." : "Login to Portal"}
             </Button>
           </form>
 

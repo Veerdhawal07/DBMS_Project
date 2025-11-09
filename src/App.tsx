@@ -1,8 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { queryClient } from "@/lib/api";
 
 // Landing & Auth Pages
 import Landing from "./pages/Landing";
@@ -29,9 +30,10 @@ import DoctorAppointments from "./pages/doctor/DoctorAppointments";
 import DoctorProfile from "./pages/doctor/DoctorProfile";
 import DoctorSettings from "./pages/doctor/DoctorSettings";
 
-import NotFound from "./pages/NotFound";
+// Protected Route Component
+import ProtectedRoute from "./components/ProtectedRoute";
 
-const queryClient = new QueryClient();
+import NotFound from "./pages/NotFound";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -48,22 +50,120 @@ const App = () => (
           <Route path="/doctor/register" element={<DoctorRegister />} />
 
           {/* Patient Portal Routes */}
-          <Route path="/patient/dashboard" element={<PatientDashboard />} />
-          <Route path="/patient/history" element={<MedicalHistory />} />
-          <Route path="/patient/prescriptions" element={<Prescriptions />} />
-          <Route path="/patient/appointments" element={<Appointments />} />
-          <Route path="/patient/audit" element={<AuditLogs />} />
-          <Route path="/patient/profile" element={<Profile />} />
-          <Route path="/patient/settings" element={<Settings />} />
+          <Route 
+            path="/patient/dashboard" 
+            element={
+              <ProtectedRoute role="patient">
+                <PatientDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient/history" 
+            element={
+              <ProtectedRoute role="patient">
+                <MedicalHistory />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient/prescriptions" 
+            element={
+              <ProtectedRoute role="patient">
+                <Prescriptions />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient/appointments" 
+            element={
+              <ProtectedRoute role="patient">
+                <Appointments />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient/audit" 
+            element={
+              <ProtectedRoute role="patient">
+                <AuditLogs />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient/profile" 
+            element={
+              <ProtectedRoute role="patient">
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/patient/settings" 
+            element={
+              <ProtectedRoute role="patient">
+                <Settings />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Doctor Portal Routes */}
-          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-          <Route path="/doctor/patients" element={<Patients />} />
-          <Route path="/doctor/records" element={<Records />} />
-          <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
-          <Route path="/doctor/appointments" element={<DoctorAppointments />} />
-          <Route path="/doctor/profile" element={<DoctorProfile />} />
-          <Route path="/doctor/settings" element={<DoctorSettings />} />
+          <Route 
+            path="/doctor/dashboard" 
+            element={
+              <ProtectedRoute role="doctor">
+                <DoctorDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor/patients" 
+            element={
+              <ProtectedRoute role="doctor">
+                <Patients />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor/records" 
+            element={
+              <ProtectedRoute role="doctor">
+                <Records />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor/prescriptions" 
+            element={
+              <ProtectedRoute role="doctor">
+                <DoctorPrescriptions />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor/appointments" 
+            element={
+              <ProtectedRoute role="doctor">
+                <DoctorAppointments />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor/profile" 
+            element={
+              <ProtectedRoute role="doctor">
+                <DoctorProfile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/doctor/settings" 
+            element={
+              <ProtectedRoute role="doctor">
+                <DoctorSettings />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* 404 Catch-all Route */}
           <Route path="*" element={<NotFound />} />

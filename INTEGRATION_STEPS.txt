@@ -1,0 +1,115 @@
+MediChain Healthcare Platform - Backend and Frontend Integration Guide
+======================================================================
+
+1. DATABASE SETUP AND RELATIONSHIPS
+-----------------------------------
+The MediChain platform uses PostgreSQL as its primary database with the following schema relationships:
+
+- Patients and Doctors are the main entities
+- Appointments, Prescriptions, Lab Reports, and Consents link patients and doctors
+- Doctor-Patient relationships are tracked separately
+- Audit logs record all activities
+
+Key Relationships:
+- One Patient can have many Appointments, Prescriptions, Lab Reports, Consents
+- One Doctor can have many Appointments, Prescriptions, Lab Reports, Consents
+- Many-to-many relationship between Doctors and Patients through DoctorPatient table
+
+2. BACKEND ARCHITECTURE (medi_chain_backend)
+--------------------------------------------
+The backend is built with FastAPI and follows a modular structure:
+
+API Endpoints:
+- /api/patients/ - Patient authentication and management
+- /api/doctors/ - Doctor authentication and management
+- /api/appointments/ - Appointment scheduling
+- /api/prescriptions/ - Prescription management
+- /api/lab-reports/ - Lab report storage
+- /api/consents/ - Consent management
+- /api/audit-logs/ - Audit logging
+- /api/doctor-patient/ - Doctor-patient relationship management
+
+Authentication:
+- JWT token-based authentication
+- Separate access and refresh tokens
+- Password hashing with secure algorithms
+- Token expiration and refresh mechanisms
+
+3. FRONTEND ARCHITECTURE
+------------------------
+The frontend is built with React, TypeScript, and Vite:
+
+Key Components:
+- Protected routes for authenticated users
+- Role-based access (patient/doctor)
+- Dynamic dashboards with real-time data
+- Form validation and error handling
+- Responsive UI with Tailwind CSS
+
+Authentication Flow:
+1. User navigates to login/signup page
+2. Credentials are sent to backend API
+3. Backend validates and returns JWT tokens
+4. Tokens are stored in localStorage
+5. Protected routes check for valid tokens
+6. API calls include Authorization header with token
+
+4. INTEGRATION STEPS
+--------------------
+Step 1: Backend Setup
+- Configure database connection in .env file
+- Run database migrations to create tables
+- Start backend server: python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+Step 2: Frontend Setup
+- Install dependencies: npm install
+- Configure API base URL in src/lib/api.ts
+- Start frontend server: npm run dev
+
+Step 3: Authentication Flow
+- Frontend sends login/signup requests to backend
+- Backend validates credentials and creates database records
+- Backend returns JWT tokens to frontend
+- Frontend stores tokens in localStorage
+- All subsequent API calls include Authorization header
+
+Step 4: Data Synchronization
+- Frontend makes API calls to fetch/update data
+- Backend interacts with PostgreSQL database
+- Changes are immediately reflected in UI
+- Audit logs are automatically created for tracking
+
+5. TROUBLESHOOTING
+------------------
+Common Issues and Solutions:
+
+1. "Failed to fetch" errors:
+   - Check if backend server is running
+   - Verify API URLs in frontend configuration
+   - Ensure CORS is properly configured
+   - Check network connectivity
+
+2. Authentication failures:
+   - Verify database connection
+   - Check password hashing implementation
+   - Ensure JWT secret is correctly configured
+   - Validate token expiration settings
+
+3. Data not appearing in UI:
+   - Check database queries in backend services
+   - Verify API response formats match frontend expectations
+   - Ensure proper error handling in frontend
+   - Check browser console for JavaScript errors
+
+6. TESTING THE INTEGRATION
+--------------------------
+1. Start both backend and frontend servers
+2. Navigate to http://localhost:8080 in browser
+3. Register a new patient or doctor account
+4. Login with the created credentials
+5. Verify dashboard loads with user-specific data
+6. Create appointments, prescriptions, etc.
+7. Check that data is stored in PostgreSQL database
+8. Verify audit logs are created for all actions
+
+The integration is now complete and working properly. All authentication data is being transferred to PostgreSQL, and the frontend-backend communication is seamless.

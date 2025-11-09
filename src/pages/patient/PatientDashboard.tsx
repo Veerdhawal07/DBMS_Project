@@ -3,8 +3,24 @@ import { Activity, Calendar, Pill, FileText, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import PatientSidebar from "@/components/PatientSidebar";
+import { useEffect, useState } from "react";
 
 const PatientDashboard = () => {
+  const [patientName, setPatientName] = useState("Patient");
+  
+  useEffect(() => {
+    // Get patient data from localStorage
+    const patientData = localStorage.getItem('patient_data');
+    if (patientData) {
+      try {
+        const parsedData = JSON.parse(patientData);
+        setPatientName(parsedData.full_name);
+      } catch (error) {
+        console.error("Error parsing patient data:", error);
+      }
+    }
+  }, []);
+
   const stats = [
     { title: "Upcoming Appointments", value: "3", icon: Calendar, color: "text-accent" },
     { title: "Active Prescriptions", value: "5", icon: Pill, color: "text-green-500" },
@@ -30,7 +46,7 @@ const PatientDashboard = () => {
             className="max-w-7xl mx-auto space-y-8"
           >
             <div>
-              <h1 className="text-4xl font-bold mb-2">Welcome Back!</h1>
+              <h1 className="text-4xl font-bold mb-2">Welcome Back, {patientName}!</h1>
               <p className="text-muted-foreground">Here's your health overview</p>
             </div>
 

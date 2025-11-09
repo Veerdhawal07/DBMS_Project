@@ -11,9 +11,24 @@ import {
 import { Heart, History, Pill, Calendar, Shield, User, Settings, LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const PatientSidebar = () => {
   const navigate = useNavigate();
+  const [patientName, setPatientName] = useState("Patient");
+
+  useEffect(() => {
+    // Get patient data from localStorage
+    const patientData = localStorage.getItem('patient_data');
+    if (patientData) {
+      try {
+        const parsedData = JSON.parse(patientData);
+        setPatientName(parsedData.full_name);
+      } catch (error) {
+        console.error("Error parsing patient data:", error);
+      }
+    }
+  }, []);
 
   const menuItems = [
     { title: "Dashboard", url: "/patient/dashboard", icon: Heart },
@@ -26,6 +41,10 @@ const PatientSidebar = () => {
   ];
 
   const handleLogout = () => {
+    // Clear all patient-related data from localStorage
+    localStorage.removeItem('patient_access_token');
+    localStorage.removeItem('patient_refresh_token');
+    localStorage.removeItem('patient_data');
     toast.success("Logged out successfully");
     navigate("/");
   };
@@ -39,6 +58,7 @@ const PatientSidebar = () => {
             <div>
               <h2 className="font-bold text-lg">MediChain</h2>
               <p className="text-xs text-muted-foreground">Patient Portal</p>
+              <p className="text-xs font-medium truncate">{patientName}</p>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { patientAuthApi } from "@/lib/api";
 
 const PatientRegister = () => {
   const navigate = useNavigate();
@@ -16,18 +17,46 @@ const PatientRegister = () => {
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords don't match");
       return;
     }
-    if (Object.values(formData).every((val) => val)) {
+    if (!Object.values(formData).every((val) => val)) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // Prepare data for API call
+      const registrationData = {
+        full_name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        date_of_birth: null,
+        gender: null,
+        address: null
+      };
+      
+      const response = await patientAuthApi.signup(registrationData);
+      
+      // Store user data in localStorage
+      localStorage.setItem('patient_data', JSON.stringify(response.patient));
+      localStorage.setItem('patient_access_token', response.access_token);
+      localStorage.setItem('patient_refresh_token', response.refresh_token);
+      
       toast.success("Registration successful!");
       navigate("/patient/dashboard");
-    } else {
-      toast.error("Please fill in all fields");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,8 +153,8 @@ const PatientRegister = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Create Account
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 

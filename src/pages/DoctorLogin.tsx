@@ -6,19 +6,41 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { doctorAuthApi } from "@/lib/api";
 
 const DoctorLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      toast.success("Login successful!");
-      navigate("/doctor/dashboard");
-    } else {
+    if (!email || !password) {
       toast.error("Please fill in all fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await doctorAuthApi.login({ email, password });
+      
+      if (response.access_token) {
+        // Store tokens and user data in localStorage
+        localStorage.setItem('doctor_access_token', response.access_token);
+        localStorage.setItem('doctor_refresh_token', response.refresh_token);
+        localStorage.setItem('doctor_data', JSON.stringify(response.doctor));
+        
+        toast.success("Login successful!");
+        navigate("/doctor/dashboard");
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.message || "Login failed. Please check your credentials and try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,6 +72,8 @@ const DoctorLogin = () => {
                   className="pl-10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
                 />
               </div>
             </div>
@@ -65,12 +89,14 @@ const DoctorLogin = () => {
                   className="pl-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Login to Portal
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Logging in..." : "Login to Portal"}
             </Button>
           </form>
 
