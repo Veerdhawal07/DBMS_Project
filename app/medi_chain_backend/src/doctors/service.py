@@ -42,3 +42,19 @@ class DoctorService:
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email or password"
             )
         return doctor
+
+    # Add delete account method
+    async def delete_doctor(self, doctor_id: str, session: AsyncSession):
+        from uuid import UUID
+        statement = select(Doctor).where(Doctor.id == UUID(doctor_id))
+        result = await session.execute(statement)
+        doctor = result.scalar_one_or_none()
+        
+        if not doctor:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found"
+            )
+        
+        await session.delete(doctor)
+        await session.commit()
+        return {"message": "Doctor account deleted successfully"}

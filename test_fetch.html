@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fetch</title>
+</head>
+<body>
+    <h1>Test Fetch to Backend</h1>
+    <button onclick="testFetch()">Test Fetch</button>
+    <div id="result"></div>
+
+    <script>
+        async function testFetch() {
+            const resultDiv = document.getElementById('result');
+            try {
+                resultDiv.innerHTML = 'Testing...';
+                
+                const response = await fetch('http://localhost:8000/api/patients/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        full_name: 'Test Patient from Browser',
+                        email: 'browser_test@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    resultDiv.innerHTML = 'Error: ' + response.status + ' ' + response.statusText;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = 'Network Error: ' + error.message;
+                console.error('Fetch error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

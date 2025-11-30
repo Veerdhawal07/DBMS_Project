@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 
@@ -14,7 +14,7 @@ class Doctor(SQLModel, table=True):
     specialization: str = Field(max_length=255)
     hospital_name: str = Field(max_length=255)
     phone: Optional[str] = Field(default=None, max_length=20)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     def __repr__(self):
         return f"<Doctor: {self.full_name}>"

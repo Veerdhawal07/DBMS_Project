@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, Building, Save } from "lucide-react";
+import { User, Mail, Phone, Building, Save, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { doctorAuthApi } from "@/lib/api";
+import { useEffect } from "react";
 
 const DoctorProfile = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "Dr. Jane Smith",
@@ -24,9 +28,67 @@ const DoctorProfile = () => {
     bio: "Board-certified cardiologist with 15 years of experience in treating cardiovascular diseases.",
   });
 
+  // Initialize form data from localStorage
+  useEffect(() => {
+    const doctorData = localStorage.getItem('doctor_data');
+    if (doctorData) {
+      try {
+        const parsedData = JSON.parse(doctorData);
+        setFormData({
+          name: parsedData.full_name || "",
+          email: parsedData.email || "",
+          phone: parsedData.phone || "",
+          specialization: parsedData.specialization || "",
+          licenseNumber: parsedData.medical_license_number || "",
+          hospital: parsedData.hospital_name || "",
+          experience: "15 years",
+          education: "MD from Harvard Medical School",
+          bio: "Board-certified cardiologist with 15 years of experience in treating cardiovascular diseases.",
+        });
+      } catch (error) {
+        console.error("Error parsing doctor data:", error);
+      }
+    }
+  }, []);
+
   const handleSave = () => {
     toast.success("Profile updated successfully!");
     setIsEditing(false);
+  };
+
+  // Add delete account function
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.")) {
+      try {
+        const token = localStorage.getItem('doctor_access_token');
+        if (!token) {
+          toast.error("Authentication required");
+          return;
+        }
+
+        const response = await fetch('http://localhost:8000/api/doctors/delete-account', {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          // Clear all doctor-related data from localStorage
+          localStorage.removeItem('doctor_access_token');
+          localStorage.removeItem('doctor_refresh_token');
+          localStorage.removeItem('doctor_data');
+          toast.success("Account deleted successfully");
+          navigate("/");
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.detail || "Failed to delete account");
+        }
+      } catch (error) {
+        console.error("Delete account error:", error);
+        toast.error("Failed to delete account. Please try again.");
+      }
+    }
   };
 
   return (
@@ -185,6 +247,29 @@ const DoctorProfile = () => {
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     disabled={!isEditing}
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Add Delete Account Section */}
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Once you delete your account, there is no going back. Please be certain.
+                  </p>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDeleteAccount}
+                  >
+                    Delete Account
+                  </Button>
                 </div>
               </CardContent>
             </Card>

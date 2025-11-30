@@ -6,10 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Phone, MapPin, Calendar, Save } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Save, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "John Doe",
@@ -22,9 +25,66 @@ const Profile = () => {
     emergencyContact: "Jane Doe - +1 (555) 987-6543",
   });
 
+  // Initialize form data from localStorage
+  useEffect(() => {
+    const patientData = localStorage.getItem('patient_data');
+    if (patientData) {
+      try {
+        const parsedData = JSON.parse(patientData);
+        setFormData({
+          name: parsedData.full_name || "",
+          email: parsedData.email || "",
+          phone: parsedData.phone || "",
+          dateOfBirth: parsedData.date_of_birth ? new Date(parsedData.date_of_birth).toISOString().split('T')[0] : "",
+          address: parsedData.address || "",
+          bloodType: "O+",
+          allergies: "Penicillin, Peanuts",
+          emergencyContact: "Jane Doe - +1 (555) 987-6543",
+        });
+      } catch (error) {
+        console.error("Error parsing patient data:", error);
+      }
+    }
+  }, []);
+
   const handleSave = () => {
     toast.success("Profile updated successfully!");
     setIsEditing(false);
+  };
+
+  // Add delete account function
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.")) {
+      try {
+        const token = localStorage.getItem('patient_access_token');
+        if (!token) {
+          toast.error("Authentication required");
+          return;
+        }
+
+        const response = await fetch('http://localhost:8000/api/patients/delete-account', {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          // Clear all patient-related data from localStorage
+          localStorage.removeItem('patient_access_token');
+          localStorage.removeItem('patient_refresh_token');
+          localStorage.removeItem('patient_data');
+          toast.success("Account deleted successfully");
+          navigate("/");
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.detail || "Failed to delete account");
+        }
+      } catch (error) {
+        console.error("Delete account error:", error);
+        toast.error("Failed to delete account. Please try again.");
+      }
+    }
   };
 
   return (
@@ -177,6 +237,29 @@ const Profile = () => {
                     }
                     disabled={!isEditing}
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Add Delete Account Section */}
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Once you delete your account, there is no going back. Please be certain.
+                  </p>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDeleteAccount}
+                  >
+                    Delete Account
+                  </Button>
                 </div>
               </CardContent>
             </Card>

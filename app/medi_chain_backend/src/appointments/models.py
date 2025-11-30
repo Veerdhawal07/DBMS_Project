@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from src.patients.models import Patient
@@ -16,7 +16,7 @@ class Appointment(SQLModel, table=True):
     reason: Optional[str] = Field(default=None)
     notes: Optional[str] = Field(default=None)
     status: str = Field(default="scheduled", max_length=50)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     # Relationships
     patient: Optional[Patient] = Relationship()

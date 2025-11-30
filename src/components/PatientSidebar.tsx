@@ -12,6 +12,7 @@ import { Heart, History, Pill, Calendar, Shield, User, Settings, LogOut } from "
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import MediChainLogo from "@/components/MediChainLogo";
 
 const PatientSidebar = () => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ const PatientSidebar = () => {
       <SidebarContent>
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-2">
-            <Heart className="h-8 w-8 text-accent" />
+            <MediChainLogo className="h-8 w-8" />
             <div>
               <h2 className="font-bold text-lg">MediChain</h2>
               <p className="text-xs text-muted-foreground">Patient Portal</p>

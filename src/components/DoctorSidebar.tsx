@@ -8,10 +8,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Stethoscope, LayoutDashboard, Users, FileText, Pill, Calendar, User, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Pill, Calendar, User, Settings, LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import MediChainLogo from "@/components/MediChainLogo";
 
 const DoctorSidebar = () => {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ const DoctorSidebar = () => {
     if (doctorData) {
       try {
         const parsedData = JSON.parse(doctorData);
-        setDoctorName(`${parsedData.firstname} ${parsedData.lastname}`);
+        // Fix: Use full_name instead of firstname and lastname
+        setDoctorName(`${parsedData.full_name || parsedData.name || "Doctor"}`);
       } catch (error) {
         console.error("Error parsing doctor data:", error);
       }
@@ -54,7 +56,7 @@ const DoctorSidebar = () => {
       <SidebarContent>
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-2">
-            <Stethoscope className="h-8 w-8 text-accent" />
+            <MediChainLogo className="h-8 w-8" />
             <div>
               <h2 className="font-bold text-lg">MediChain</h2>
               <p className="text-xs text-muted-foreground">Doctor Portal</p>

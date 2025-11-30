@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from src.patients.models import Patient
@@ -14,7 +14,7 @@ class LabReport(SQLModel, table=True):
     doctor_id: Optional[uuid.UUID] = Field(default=None, foreign_key="doctors.id")
     file_url: str = Field()
     report_type: str = Field(max_length=100)
-    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     # Relationships
     patient: Optional[Patient] = Relationship()

@@ -20,7 +20,6 @@ if doctor_login_response.status_code == 200:
     doctor_token = doctor_result["access_token"]
     print(f"Doctor logged in with ID: {doctor_id}")
     
-    # Get the patient ID from earlier
     patient_login_data = {
         "email": "test@example.com",
         "password": "password123"

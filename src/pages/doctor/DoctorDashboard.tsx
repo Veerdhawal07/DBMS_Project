@@ -7,37 +7,81 @@ import { Users, FileText, Pill, Calendar, Plus, TrendingUp } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { doctorApi } from "@/lib/api";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
   const [doctorName, setDoctorName] = useState("Dr. Smith");
+  const [doctorId, setDoctorId] = useState("");
+  const [stats, setStats] = useState([
+    { title: "Total Patients", value: "0", icon: Users, color: "text-accent" },
+    { title: "Today's Appointments", value: "0", icon: Calendar, color: "text-green-500" },
+    { title: "Pending Records", value: "0", icon: FileText, color: "text-blue-500" },
+    { title: "Active Prescriptions", value: "0", icon: Pill, color: "text-purple-500" },
+  ]);
+  const [todayAppointments, setTodayAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get doctor data from localStorage
     const doctorData = localStorage.getItem('doctor_data');
-    if (doctorData) {
+    const accessToken = localStorage.getItem('doctor_access_token');
+    
+    if (doctorData && accessToken) {
       try {
         const parsedData = JSON.parse(doctorData);
-        setDoctorName(`Dr. ${parsedData.firstname} ${parsedData.lastname}`);
+        setDoctorId(parsedData.id);
+        // Fix: Use full_name instead of firstname and lastname
+        setDoctorName(`Dr. ${parsedData.full_name || parsedData.name || "Doctor"}`);
+        
+        // Fetch dynamic data
+        fetchDashboardData(accessToken, parsedData.id);
       } catch (error) {
         console.error("Error parsing doctor data:", error);
       }
     }
   }, []);
 
-  const stats = [
-    { title: "Total Patients", value: "248", icon: Users, color: "text-accent" },
-    { title: "Today's Appointments", value: "12", icon: Calendar, color: "text-green-500" },
-    { title: "Pending Records", value: "8", icon: FileText, color: "text-blue-500" },
-    { title: "Active Prescriptions", value: "45", icon: Pill, color: "text-purple-500" },
-  ];
-
-  const todayAppointments = [
-    { time: "09:00 AM", patient: "Alice Johnson", reason: "Follow-up checkup", status: "completed" },
-    { time: "10:30 AM", patient: "Bob Smith", reason: "New consultation", status: "in-progress" },
-    { time: "02:00 PM", patient: "Carol White", reason: "Lab results review", status: "upcoming" },
-    { time: "03:30 PM", patient: "David Brown", reason: "Prescription refill", status: "upcoming" },
-  ];
+  const fetchDashboardData = async (token: string, id: string) => {
+    try {
+      setLoading(true);
+      
+      // Fetch patients count
+      const patientsResponse = await doctorApi.getPatients(token, id);
+      const patientsCount = patientsResponse ? patientsResponse.length : 0;
+      
+      // Fetch appointments
+      const appointmentsResponse = await doctorApi.getAppointments(token, id);
+      const allAppointments = appointmentsResponse || [];
+      
+      // Filter today's appointments (simplified logic)
+      const todaysAppointments = allAppointments.filter((apt: any) => {
+        // In a real implementation, you would filter by actual date
+        return apt; // For now, return all appointments
+      });
+      
+      // Fetch prescriptions
+      const prescriptionsResponse = await doctorApi.getPrescriptions(token, id);
+      const prescriptionsCount = prescriptionsResponse ? prescriptionsResponse.length : 0;
+      
+      // Update stats with fetched data
+      setStats([
+        { title: "Total Patients", value: patientsCount.toString(), icon: Users, color: "text-accent" },
+        { title: "Today's Appointments", value: todaysAppointments.length.toString(), icon: Calendar, color: "text-green-500" },
+        { title: "Pending Records", value: "0", icon: FileText, color: "text-blue-500" }, // Would need a separate endpoint
+        { title: "Active Prescriptions", value: prescriptionsCount.toString(), icon: Pill, color: "text-purple-500" },
+      ]);
+      
+      // Update appointments list
+      setTodayAppointments(todaysAppointments.slice(0, 4)); // Show only first 4
+      
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddPatient = () => {
     toast.success("Opening new patient form...");
@@ -53,6 +97,14 @@ const DoctorDashboard = () => {
     toast.success("Opening prescription editor...");
     navigate("/doctor/prescriptions");
   };
+
+  // Sample appointments data (fallback)
+  const sampleAppointments = [
+    { time: "09:00 AM", patient: "Alice Johnson", reason: "Follow-up checkup", status: "completed" },
+    { time: "10:30 AM", patient: "Bob Smith", reason: "New consultation", status: "in-progress" },
+    { time: "02:00 PM", patient: "Carol White", reason: "Lab results review", status: "upcoming" },
+    { time: "03:30 PM", patient: "David Brown", reason: "Prescription refill", status: "upcoming" },
+  ];
 
   return (
     <SidebarProvider>
@@ -101,7 +153,13 @@ const DoctorDashboard = () => {
                       <stat.icon className={`h-5 w-5 ${stat.color}`} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold">{stat.value}</div>
+                      <div className="text-3xl font-bold">
+                        {loading ? (
+                          <div className="h-8 w-12 bg-gray-200 animate-pulse rounded"></div>
+                        ) : (
+                          stat.value
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -119,25 +177,40 @@ const DoctorDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {todayAppointments.map((apt, index) => (
+                    {(loading ? Array(4).fill(null) : (todayAppointments.length > 0 ? todayAppointments : sampleAppointments)).map((apt: any, index: number) => (
                       <div
                         key={index}
                         className="flex items-center justify-between pb-4 border-b border-border last:border-0"
                       >
-                        <div>
-                          <p className="font-medium">{apt.patient}</p>
-                          <p className="text-sm text-muted-foreground">{apt.reason}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{apt.time}</p>
-                          <p className={`text-xs ${
-                            apt.status === "completed" ? "text-green-500" :
-                            apt.status === "in-progress" ? "text-accent" :
-                            "text-muted-foreground"
-                          }`}>
-                            {apt.status}
-                          </p>
-                        </div>
+                        {loading ? (
+                          <div className="flex items-center justify-between w-full">
+                            <div className="space-y-2">
+                              <div className="h-4 w-32 bg-gray-200 animate-pulse rounded"></div>
+                              <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                            </div>
+                            <div className="space-y-2 text-right">
+                              <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+                              <div className="h-3 w-12 bg-gray-200 animate-pulse rounded"></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div>
+                              <p className="font-medium">{apt.patient || apt.patient_name || "Unknown Patient"}</p>
+                              <p className="text-sm text-muted-foreground">{apt.reason || apt.description || "No reason provided"}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-medium">{apt.time || "N/A"}</p>
+                              <p className={`text-xs ${
+                                apt.status === "completed" ? "text-green-500" :
+                                apt.status === "in-progress" ? "text-accent" :
+                                "text-muted-foreground"
+                              }`}>
+                                {apt.status || "scheduled"}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -46,6 +46,7 @@ async def register_doctor(
         doctor=doctor_profile,
         access_token=access_token,
         refresh_token=refresh_token,
+        token_type="bearer"
     )
 
 
@@ -82,6 +83,7 @@ async def login_doctor(
         doctor=doctor_profile,
         access_token=access_token,
         refresh_token=refresh_token,
+        token_type="bearer"
     )
 
 
@@ -95,3 +97,14 @@ async def refresh_access_token(token_details: dict = Depends(RefreshTokenBearer(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Invalid or expired refresh token",
     )
+
+
+# Add delete account endpoint
+@doctor_router.delete("/delete-account")
+async def delete_doctor_account(
+    session: AsyncSession = Depends(get_session),
+    token_data: dict = Depends(access_token_bearer)
+):
+    doctor_id = token_data["user"]["id"]
+    result = await doctor_service.delete_doctor(doctor_id, session)
+    return result

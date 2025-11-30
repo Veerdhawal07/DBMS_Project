@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from src.patients.models import Patient
@@ -15,7 +15,7 @@ class Prescription(SQLModel, table=True):
     medication: str = Field()  # JSONB in PostgreSQL
     dosage: str = Field()
     instructions: Optional[str] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     # Relationships
     patient: Optional[Patient] = Relationship()

@@ -12,12 +12,14 @@ const DoctorRegister = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
+    
     email: "",
     phone: "",
     specialization: "",
     licenseNumber: "",
     password: "",
     confirmPassword: "",
+    hospitalName: ""
   });
   const [loading, setLoading] = useState(false);
 
@@ -27,8 +29,10 @@ const DoctorRegister = () => {
       toast.error("Passwords don't match");
       return;
     }
-    if (!Object.values(formData).every((val) => val)) {
-      toast.error("Please fill in all fields");
+    // Check only required fields
+    const requiredFields = [formData.name, formData.email, formData.phone, formData.specialization, formData.licenseNumber, formData.password, formData.confirmPassword];
+    if (!requiredFields.every((val) => val)) {
+      toast.error("Please fill in all required fields");
       return;
     }
     
@@ -40,9 +44,8 @@ const DoctorRegister = () => {
         email: formData.email,
         phone: formData.phone,
         specialization: formData.specialization,
-        medical_license_number: formData.licenseNumber,
-        password: formData.password,
-        hospital_name: "",
+        hospital_name: formData.hospitalName || "",
+        password: formData.password
       };
       
       const response = await doctorAuthApi.signup(registrationData);
@@ -56,7 +59,14 @@ const DoctorRegister = () => {
       navigate("/doctor/dashboard");
     } catch (error: any) {
       console.error("Registration error:", error);
-      toast.error(error.message || "Registration failed. Please try again.");
+      // Better error handling to avoid [object object] error
+      let errorMessage = "Registration failed. Please try again.";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.toString() !== '[object Object]') {
+        errorMessage = error.toString();
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -149,6 +159,22 @@ const DoctorRegister = () => {
                   setFormData({ ...formData, licenseNumber: e.target.value })
                 }
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hospitalName">Hospital Name</Label>
+              <div className="relative">
+                <Building className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                <Input
+                  id="hospitalName"
+                  placeholder="City Medical Center"
+                  className="pl-10"
+                  value={formData.hospitalName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, hospitalName: e.target.value })
+                  }
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -4,29 +4,70 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SidebarProvider } from "@/components/ui/sidebar";
 import PatientSidebar from "@/components/PatientSidebar";
 import { useEffect, useState } from "react";
+import { patientApi } from "@/lib/api";
+import { toast } from "sonner";
 
 const PatientDashboard = () => {
   const [patientName, setPatientName] = useState("Patient");
-  
+  const [patientId, setPatientId] = useState("");
+  const [stats, setStats] = useState([
+    { title: "Upcoming Appointments", value: "0", icon: Calendar, color: "text-accent" },
+    { title: "Active Prescriptions", value: "0", icon: Pill, color: "text-green-500" },
+    { title: "Medical Records", value: "0", icon: FileText, color: "text-blue-500" },
+    { title: "Health Score", value: "0%", icon: TrendingUp, color: "text-purple-500" },
+  ]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     // Get patient data from localStorage
     const patientData = localStorage.getItem('patient_data');
-    if (patientData) {
+    const accessToken = localStorage.getItem('patient_access_token');
+    
+    if (patientData && accessToken) {
       try {
         const parsedData = JSON.parse(patientData);
+        setPatientId(parsedData.id);
         setPatientName(parsedData.full_name);
+        
+        // Fetch dynamic data
+        fetchDashboardData(accessToken, parsedData.id);
       } catch (error) {
         console.error("Error parsing patient data:", error);
       }
     }
   }, []);
 
-  const stats = [
-    { title: "Upcoming Appointments", value: "3", icon: Calendar, color: "text-accent" },
-    { title: "Active Prescriptions", value: "5", icon: Pill, color: "text-green-500" },
-    { title: "Medical Records", value: "12", icon: FileText, color: "text-blue-500" },
-    { title: "Health Score", value: "92%", icon: TrendingUp, color: "text-purple-500" },
-  ];
+  const fetchDashboardData = async (token: string, id: string) => {
+    try {
+      setLoading(true);
+      
+      // Fetch appointments
+      const appointmentsResponse = await patientApi.getAppointments(token, id);
+      const appointmentsCount = appointmentsResponse ? appointmentsResponse.length : 0;
+      
+      // Fetch prescriptions
+      const prescriptionsResponse = await patientApi.getPrescriptions(token, id);
+      const prescriptionsCount = prescriptionsResponse ? prescriptionsResponse.length : 0;
+      
+      // Fetch medical history
+      const medicalHistoryResponse = await patientApi.getMedicalHistory(token, id);
+      const medicalRecordsCount = medicalHistoryResponse ? medicalHistoryResponse.length : 0;
+      
+      // Update stats with fetched data
+      setStats([
+        { title: "Upcoming Appointments", value: appointmentsCount.toString(), icon: Calendar, color: "text-accent" },
+        { title: "Active Prescriptions", value: prescriptionsCount.toString(), icon: Pill, color: "text-green-500" },
+        { title: "Medical Records", value: medicalRecordsCount.toString(), icon: FileText, color: "text-blue-500" },
+        { title: "Health Score", value: "92%", icon: TrendingUp, color: "text-purple-500" },
+      ]);
+      
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const recentActivity = [
     { action: "Lab results uploaded", date: "2 hours ago", type: "report" },
@@ -66,7 +107,13 @@ const PatientDashboard = () => {
                       <stat.icon className={`h-5 w-5 ${stat.color}`} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold">{stat.value}</div>
+                      <div className="text-3xl font-bold">
+                        {loading ? (
+                          <div className="h-8 w-12 bg-gray-200 animate-pulse rounded"></div>
+                        ) : (
+                          stat.value
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>

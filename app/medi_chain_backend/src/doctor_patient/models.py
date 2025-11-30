@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import uuid
 from src.patients.models import Patient
@@ -12,7 +12,7 @@ class DoctorPatient(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     doctor_id: uuid.UUID = Field(foreign_key="doctors.id", nullable=False)
     patient_id: uuid.UUID = Field(foreign_key="patients.id", nullable=False)
-    assigned_at: datetime = Field(default_factory=datetime.utcnow)
+    assigned_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     relationship_type: Optional[str] = Field(default="primary_care", max_length=50)  # primary_care, specialist, consultant
     is_active: bool = Field(default=True)
     

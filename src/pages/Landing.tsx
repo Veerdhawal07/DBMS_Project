@@ -31,7 +31,6 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
       <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <motion.div
@@ -39,7 +38,7 @@ const Landing = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <Heart className="h-8 w-8 text-accent" />
+            <img src="MediChain_logo.png" alt="" className="h-12 w-12" />
             <span className="text-2xl font-bold">MediChain</span>
           </motion.div>
 
@@ -58,7 +57,6 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <motion.div
@@ -103,7 +101,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Grid */}
       <section className="container mx-auto px-4 py-20 border-t border-border">
         <motion.div
           initial={{ opacity: 0 }}

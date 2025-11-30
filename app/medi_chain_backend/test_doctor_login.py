@@ -3,7 +3,7 @@ import json
 
 # Test doctor login with existing credentials
 login_data = {
-    "email": "drsmith@example.com",
+    "email": "mith@exampledrs.com",
     "password": "doctorpass123"
 }
 
